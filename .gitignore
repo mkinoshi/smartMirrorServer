@@ -1,0 +1,4 @@
+npm-debug.*
+env.sh
+node_modules
+.vscode
