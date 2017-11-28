@@ -1,0 +1,18 @@
+<div id='time'>{{time}}</div>
+<div id='date'>{{date}}</div>
+<div class="list-group">
+    {{#each message}}
+    <a href="#" class="list-group-item list-group-item-action flex-column align-items-start">
+      <div class="d-flex w-100 justify-content-between">
+        <h3 class="mb-1">{{ this.[0] }}</h3>
+        <h5>From: {{this.[2]}}</h5>
+        <small class="text-muted">{{ this.[1] }}</small>
+      </div>
+    </a>
+  {{else}}
+  <div class="alert alert-danger" role="alert">
+No new Emails!
+</div>
+  {{/each}}
+
+</div>

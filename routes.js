@@ -12,6 +12,14 @@ var readline = require('readline');
 var google = require('googleapis');
 var googleAuth = require('google-auth-library');
 var path = require("path");
+
+var publicPath = path.resolve(__dirname, 'public');
+
+// Serve this path with the Express static file middleware.
+var app = express();
+app.use(express.static(publicPath));
+
+
 mongoose.Promise = global.Promise;
 var TOKEN_DIR = path.resolve(__dirname) + '/.credentials/';
 var TOKEN_PATH = TOKEN_DIR + 'gmail_token.json';
@@ -36,13 +44,14 @@ router.get('/', function(req, res) {
 })
 
 router.get('/email', function(req, res) {
-  var clientSecret = process.env.SECRET;
-  var clientId = process.env.CLIENTID;
-  var redirectUrl = process.env.REDIRECTURI;
+
+  var clientSecret = "81_OzkfoU862dE6IZNYgcgac";
+  var clientId = "63923800462-mg0dssa8meh773i1kheqk0uiamoldonr.apps.googleusercontent.com";
+  var redirectUrl = "urn:ietf:wg:oauth:2.0:oob";
   var auth = new googleAuth();
   var oauth2Client = new auth.OAuth2(clientId, clientSecret, redirectUrl);
   fs.readFile(TOKEN_PATH, function(err, token) {
-    console.log(res)
+    //console.log(res)
     if (err) {
       getNewToken(oauth2Client, listLabels, res);
     } else {
@@ -91,17 +100,27 @@ var storeToken = function(token) {
 var listLabels = function(auth, res) {
   var gmail = google.gmail('v1');
   var messages_snippet = [];
+  var dt = new Date();
+  var ampm = 'pm';
+  if (dt.getHours() / 12 < 1) {
+    ampm = 'am'
+  }
+  var curTime = ((dt.getHours()) % 12) + ":" + zeroFill(dt.getMinutes(),2) + ' '+ ampm;
+  var curDate = dt.getDate() + "-" + dt.getMonth() + "-" + dt.getFullYear();
   gmail.users.messages.list({
     auth: auth,
     userId: 'me',
+    maxResults: 10,
+    q:'is:unread',
   }, function(err, response) {
     if (err) {
       console.log('The API returned an error: ' + err);
       return;
     }
-    var messages = response.messages.splice(0, 10);
-    if (messages.length == 0) {
+    var messages = response.messages;
+    if (messages == null) {
       console.log('No messages found.');
+      res.render('email',{message: '', time:curTime, date: curDate})
     } else {
       var promises = [];
       messages.forEach((mes) => {
@@ -110,12 +129,15 @@ var listLabels = function(auth, res) {
       Promise.all(promises)
       .then(() => {
         console.log('yo yo ')
-        res.json({"messages": messages_snippet})
+        console.log(messages_snippet);
+        res.render('email', {message: messages_snippet, time:curTime, date: curDate})
+
       })
       .catch((err) => {
         console.log(err);
         console.log('Oops')
       })
+
     }
   });
 }
@@ -126,12 +148,29 @@ var getEachMessage = function(auth, messageId, messages) {
     gmail.users.messages.get({
       auth: auth,
       'userId': 'me',
-      'id': messageId
+      'id': messageId,
+      'format': 'metadata'
     }, function(err, response) {
       if (err) console.log(err)
-      messages.push(response.snippet);
+      console.log(response.payload.headers)
+      messages.push([response.payload.headers.find(findHeader)["value"],response.snippet,response.payload.headers.find(findAuthor)["value"]]);
       resolve();
     })
-  }) 
+  })
 }
 module.exports = router;
+function findHeader(element) {
+  return element['name']=='Subject';
+}
+function findAuthor(element) {
+  return element['name']=='From';
+}
+function zeroFill( number, width )
+{
+  width -= number.toString().length;
+  if ( width > 0 )
+  {
+    return new Array( width + (/\./.test( number ) ? 2 : 1) ).join( '0' ) + number;
+  }
+  return number + ""; // always return a string
+}
