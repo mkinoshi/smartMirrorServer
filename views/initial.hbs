@@ -1,11 +1,18 @@
 <div class="container">
-  <div class="row">
-    <div class="col-xs-12">
-      <div class="col-xs-3">
-        Temperature(low): {{weather.low}}
-        Temperature(high): {{weather.high}}
-        Weather: {{weather.text}}
-      </div>      
+  <header>
+    <div class="container">
+        <div class="row">
+            <div class="six columns">
+                <span class="icon-menu2 menu" id="sandwich"></span>
+            </div>
+            <div class="six columns right">
+                <span id="weather"><span class="light">Low</span> · <b>{{weather.low}} F </b></span>
+                <span class="light">High</span> · <b>{{weather.high}} F </b></a></span>
+                <span class="light">Weather</span> · <b>{{weather.text}}</b></a></span>
+                <span id="day">Wednesday, November 29 · <b id="time">10:42:16</b> <span class="light" id="timePrefix">am</span></span>
+            </div>
+        </div>
     </div>
-  </div>
+</header>
 </div>
+<script src="js/initial.js"></script>

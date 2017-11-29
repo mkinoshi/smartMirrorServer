@@ -14,7 +14,7 @@ var googleAuth = require('google-auth-library');
 var path = require("path");
 
 var publicPath = path.resolve(__dirname, 'public');
-
+var rss_API = "cfa213fae8474a5f9af9a436ad71c1a5"
 // Serve this path with the Express static file middleware.
 var app = express();
 app.use(express.static(publicPath));
@@ -30,16 +30,16 @@ router.get('/', function(req, res) {
   weather.find({search: 'Waterville, ME', degreeType: 'F'}, function(err, result) {
     if(err) {
       res.status(400).send({"error": "could not save data"})
-    };
-    console.log(result[0].forecast)
-    const weather = {
-      low: result[0].forecast[0].low,
-      high: result[0].forecast[0].high,
-      text: result[0].forecast[0].skytextday
+    } else {
+      console.log(result[0].forecast)
+      const weather = {
+        low: result[0].forecast[0].low,
+        high: result[0].forecast[0].high,
+        text: result[0].forecast[0].skytextday
+      }
+      console.log(weather)
+      res.render('initial', {weather: weather})
     }
-    console.log(weather)
-    res.render('initial', {weather: weather})
-
   });
 })
 
@@ -138,8 +138,28 @@ var listLabels = function(auth, res) {
       .then(() => {
         console.log('Emails Obtained!')
         //console.log(messages_snippet);
-        res.render('email', {message: messages_snippet, time:curTime, date: curDate})
-
+        weather.find({search: 'Waterville, ME', degreeType: 'F'}, function(err, result) {
+          if(err) {
+            res.status(400).send({"error": "could not save data"})
+          } else {
+            console.log(result[0].forecast)
+            const weather = {
+              low: result[0].forecast[0].low,
+              high: result[0].forecast[0].high,
+              text: result[0].forecast[0].skytextday
+            }
+            axios.get('https://newsapi.org/v2/top-headlines?sources=techcrunch&apiKey=' + rss_API)
+            .then((results) => {
+              console.log(results.data.articles)
+              var articles = results.data.articles.map((data) => [data.title, data.url])
+              res.render('email', {message: messages_snippet, time:curTime, date: curDate, weather: weather, articles: articles})
+            })
+            .catch((err) => {
+              console.log(err)
+            })
+    
+          }
+        })
       })
       .catch((err) => {
         console.log(err);
