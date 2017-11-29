@@ -45,26 +45,22 @@ router.get('/', function(req, res) {
 
 router.get('/email', function(req, res) {
 
-  var clientSecretMail = "81_OzkfoU862dE6IZNYgcgac";
-  var clientIdMail = "63923800462-mg0dssa8meh773i1kheqk0uiamoldonr.apps.googleusercontent.com";
-  var redirectUrlMail = "urn:ietf:wg:oauth:2.0:oob";
-
-  var clientSecretEvent = "xXM8L5wl7SW7ghJITiVI6dqr";
-  var clientIdEvent = "63923800462-n99v63uv9c61d38oa8l4plg5apbar3t2.apps.googleusercontent.com";
-  var redirectUrlEvent = "urn:ietf:wg:oauth:2.0:oob";
+  var clientSecret = "81_OzkfoU862dE6IZNYgcgac";
+  var clientId = "63923800462-mg0dssa8meh773i1kheqk0uiamoldonr.apps.googleusercontent.com";
+  var redirectUrl = "urn:ietf:wg:oauth:2.0:oob";
 
 
   var auth = new googleAuth();
-  var oauth2ClientMail = new auth.OAuth2(clientIdMail, clientSecretMail, redirectUrlMail);
-  var oauth2ClientEvent = new auth.OAuth2(clientIdEvent, clientSecretEvent, redirectUrlEvent);
+  var oauth2Client = new auth.OAuth2(clientId, clientSecret, redirectUrl);
+
   fs.readFile(TOKEN_PATH, function(err, token) {
     //console.log(res)
     if (err) {
-      getNewToken(oauth2ClientMail, listLabels, res);
+      getNewToken(oauth2Client, listLabels, res);
     } else {
-      oauth2ClientMail.credentials = JSON.parse(token);
-      listLabels(oauth2ClientMail, res);
-      listEvents(oauth2ClientMail)
+      oauth2Client.credentials = JSON.parse(token);
+      listLabels(oauth2Client, res);
+      listEvents(oauth2Client)
     }
   })
 })
@@ -107,6 +103,7 @@ var storeToken = function(token) {
 
 var listLabels = function(auth, res) {
   var gmail = google.gmail('v1');
+  //Need to remove my old (bad) time code in favor of makoto's good time code!
   var messages_snippet = [];
   var dt = new Date();
   var ampm = 'pm';
@@ -157,7 +154,7 @@ var listLabels = function(auth, res) {
             .catch((err) => {
               console.log(err)
             })
-    
+
           }
         })
       })
