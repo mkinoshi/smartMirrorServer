@@ -23,7 +23,7 @@ app.use(express.static(publicPath));
 mongoose.Promise = global.Promise;
 var TOKEN_DIR = path.resolve(__dirname) + '/.credentials/';
 var TOKEN_PATH = TOKEN_DIR + 'gmail_token.json';
-var SCOPES = ['https://www.googleapis.com/auth/gmail.readonly'];
+var SCOPES = ['https://www.googleapis.com/auth/gmail.readonly','https://www.googleapis.com/auth/calendar.readonly'];
 var axios = require('axios');
 
 router.get('/', function(req, res) {
@@ -45,18 +45,26 @@ router.get('/', function(req, res) {
 
 router.get('/email', function(req, res) {
 
-  var clientSecret = "81_OzkfoU862dE6IZNYgcgac";
-  var clientId = "63923800462-mg0dssa8meh773i1kheqk0uiamoldonr.apps.googleusercontent.com";
-  var redirectUrl = "urn:ietf:wg:oauth:2.0:oob";
+  var clientSecretMail = "81_OzkfoU862dE6IZNYgcgac";
+  var clientIdMail = "63923800462-mg0dssa8meh773i1kheqk0uiamoldonr.apps.googleusercontent.com";
+  var redirectUrlMail = "urn:ietf:wg:oauth:2.0:oob";
+
+  var clientSecretEvent = "xXM8L5wl7SW7ghJITiVI6dqr";
+  var clientIdEvent = "63923800462-n99v63uv9c61d38oa8l4plg5apbar3t2.apps.googleusercontent.com";
+  var redirectUrlEvent = "urn:ietf:wg:oauth:2.0:oob";
+
+
   var auth = new googleAuth();
-  var oauth2Client = new auth.OAuth2(clientId, clientSecret, redirectUrl);
+  var oauth2ClientMail = new auth.OAuth2(clientIdMail, clientSecretMail, redirectUrlMail);
+  var oauth2ClientEvent = new auth.OAuth2(clientIdEvent, clientSecretEvent, redirectUrlEvent);
   fs.readFile(TOKEN_PATH, function(err, token) {
     //console.log(res)
     if (err) {
-      getNewToken(oauth2Client, listLabels, res);
+      getNewToken(oauth2ClientMail, listLabels, res);
     } else {
-      oauth2Client.credentials = JSON.parse(token);
-      listLabels(oauth2Client, res);
+      oauth2ClientMail.credentials = JSON.parse(token);
+      listLabels(oauth2ClientMail, res);
+      listEvents(oauth2ClientMail)
     }
   })
 })
@@ -128,8 +136,8 @@ var listLabels = function(auth, res) {
       })
       Promise.all(promises)
       .then(() => {
-        console.log('yo yo ')
-        console.log(messages_snippet);
+        console.log('Emails Obtained!')
+        //console.log(messages_snippet);
         res.render('email', {message: messages_snippet, time:curTime, date: curDate})
 
       })
@@ -152,7 +160,7 @@ var getEachMessage = function(auth, messageId, messages) {
       'format': 'metadata'
     }, function(err, response) {
       if (err) console.log(err)
-      console.log(response.payload.headers)
+      //console.log(response.payload.headers)
       messages.push([response.payload.headers.find(findHeader)["value"],response.snippet,response.payload.headers.find(findAuthor)["value"]]);
       resolve();
     })
@@ -173,4 +181,32 @@ function zeroFill( number, width )
     return new Array( width + (/\./.test( number ) ? 2 : 1) ).join( '0' ) + number;
   }
   return number + ""; // always return a string
+}
+
+function listEvents(auth) {
+  var calendar = google.calendar('v3');
+  calendar.events.list({
+    auth: auth,
+    calendarId: 'primary',
+    timeMin: (new Date()).toISOString(),
+    maxResults: 10,
+    singleEvents: true,
+    orderBy: 'startTime'
+  }, function(err, response) {
+    if (err) {
+      console.log('The API returned an error: ' + err);
+      return;
+    }
+    var events = response.items;
+    if (events.length == 0) {
+      console.log('No upcoming events found.');
+    } else {
+      console.log('Upcoming 10 events:');
+      for (var i = 0; i < events.length; i++) {
+        var event = events[i];
+        var start = event.start.dateTime || event.start.date;
+        console.log('%s - %s', start, event.summary);
+      }
+    }
+  });
 }
