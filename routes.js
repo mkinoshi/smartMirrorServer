@@ -150,7 +150,6 @@ function getPersonalInfo(auth, res, rssSource) {
   .catch((err) => {
   })
   .then((returnedMessages) => {
-    console.log('it should be here')
     messagesInfo = returnedMessages ? returnedMessages : [];
     return getEvents(auth)
   })
@@ -158,7 +157,6 @@ function getPersonalInfo(auth, res, rssSource) {
   })
   .then((returnedCalender) => {
     eventInfo = returnedCalender ? returnedCalender : [];
-    console.log(eventInfo)
     return getWeather()
   })
   .catch((err) => {
@@ -177,7 +175,7 @@ function getPersonalInfo(auth, res, rssSource) {
   .then((returnedNews) => {
     newsInfo = returnedNews ? returnedNews : [];
     var curDate = getTime()
-    res.render('email', {date: curDate, message: messagesInfo, weather: weather, articles: newsInfo})
+    res.render('email', {date: curDate, message: messagesInfo, weather: weather, articles: newsInfo, events: eventInfo})
   })
 }
 
@@ -301,16 +299,13 @@ function getEvents(auth) {
         console.log('The API returned an error: ' + err);
         reject(new Error('calender'))
       } else {
-        console.log(response)
-        console.log('Upcoming 10 events:');
-        result = [];
+        var result = [];
+        var events = response.items
         for (var i = 0; i < events.length; i++) {
           var event = events[i];
           var start = event.start.dateTime || event.start.date;
-          console.log('%s - %s', start, event.summary);
-          result.push([start, event.summary])
+          result.push([start, event.summary, event.location])
         }
-        console.log(result);
         resolve(result)
       }
     });
