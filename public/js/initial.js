@@ -7,7 +7,7 @@ $( document ).ready(function() {
   var h = today.getHours();
   var m = today.getMinutes();
   var s = today.getSeconds();
-  setTimeInterval(function() {
+  setInterval(function() {
     var today = new Date();
     var month = (today.getMonth() + 1 ) + "/" + today.getDate();
     var ind = today.getDay();
@@ -18,4 +18,10 @@ $( document ).ready(function() {
     console.log(today)
     $("#day")[0].innerHTML = month + " - " + h + ":" + m + ":" + s; 
   }, 1000)
+  var socket = io();  
+  socket.on('detected', function(msg){
+    console.log('should change the state')
+    console.log(msg)
+    window.location = "http://localhost:3000/email/?user=" + msg;
+  });
 });

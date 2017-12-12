@@ -14,19 +14,10 @@ var MongoStore = require('connect-mongo')(session);
 // var routes = require('./routes/index');
 var mongoose = require('mongoose');
 
-//mongodb stuff here
-// mongoose.connection.on('connected', function() {
-//   console.log('Success: connected to MongoDb!');
-// });
-// mongoose.connection.on('error', function() {
-//   console.log('Error connecting to MongoDb. Check MONGODB_URI in env.sh');
-//   process.exit(1);
-// });
-// mongoose.connect(process.env.MONGODB_URI_TEST);
-
-
 //start express server
 var app = express();
+const server = require('http').Server(app);
+const io = require('socket.io')(server);
 
 // view engine setup
 app.engine('.hbs', exphbs({defaultLayout: 'main', extname: '.hbs'}));
@@ -72,7 +63,21 @@ app.use(function(err, req, res, next) {
 
 // All of our routes are in routes.js
 var routes = require('./routes');
+app.post('/detected', function(req, res) {
+  console.log('here')
+  if (req.body.user === 'jerry') {
+  } else {
+  }
+  io.sockets.emit("detected", req.body.user);
+  res.json({'detected': true})
+})
+
+app.post('/lost', function(req, res) {
+  console.log('here')
+  io.sockets.emit("lost", null);
+  res.json({'detected': false})
+})
 app.use('/', routes);
 
 console.log('Express started. Listening on port', process.env.PORT || 3000);
-app.listen(process.env.PORT || 3000);
+server.listen(process.env.PORT || 3000);

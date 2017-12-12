@@ -16,8 +16,8 @@ var path = require("path");
 var publicPath = path.resolve(__dirname, 'public');
 var rss_API = "cfa213fae8474a5f9af9a436ad71c1a5"
 // Serve this path with the Express static file middleware.
-var app = express();
-app.use(express.static(publicPath));
+// var app = express();
+// app.use(express.static(publicPath));
 
 
 mongoose.Promise = global.Promise;
@@ -44,7 +44,7 @@ router.get('/', function(req, res) {
 })
 
 router.get('/email', function(req, res) {
-
+  console.log(req.query.user);
   var clientSecretMail = "81_OzkfoU862dE6IZNYgcgac";
   var clientIdMail = "63923800462-mg0dssa8meh773i1kheqk0uiamoldonr.apps.googleusercontent.com";
   var redirectUrlMail = "urn:ietf:wg:oauth:2.0:oob";
