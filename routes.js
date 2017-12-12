@@ -18,6 +18,8 @@ var rss_API = "cfa213fae8474a5f9af9a436ad71c1a5"
 // Serve this path with the Express static file middleware.
 var app = express();
 app.use(express.static(publicPath));
+var fs = require('fs');
+
 
 
 mongoose.Promise = global.Promise;
@@ -44,11 +46,17 @@ router.get('/', function(req, res) {
 })
 
 router.get('/email', function(req, res) {
+  try {
+      var data = fs.readFileSync('jerry.txt', 'utf8');
+      var array = data.match(/[^\s]+/g);
 
-  var clientSecret = "81_OzkfoU862dE6IZNYgcgac";
-  var clientId = "63923800462-mg0dssa8meh773i1kheqk0uiamoldonr.apps.googleusercontent.com";
-  var redirectUrl = "urn:ietf:wg:oauth:2.0:oob";
-
+  } catch(e) {
+      console.log('Error:', e.stack); //Make it not start with an error message
+  }
+  var clientSecret = array[0];
+  var clientId =  array[1];
+  var redirectUrl =  array[2];
+  var rssSource =  array[3];
 
   var auth = new googleAuth();
   var oauth2Client = new auth.OAuth2(clientId, clientSecret, redirectUrl);
@@ -145,7 +153,8 @@ var listLabels = function(auth, res) {
               high: result[0].forecast[0].high,
               text: result[0].forecast[0].skytextday
             }
-            axios.get('https://newsapi.org/v2/top-headlines?sources=techcrunch&apiKey=' + rss_API)
+              var rssSource = 'techcrunch'; //Read more lines here
+            axios.get('https://newsapi.org/v2/top-headlines?sources=' + rssSource + '&apiKey=' + rss_API)
             .then((results) => {
               console.log(results.data.articles)
               var articles = results.data.articles.map((data) => [data.title, data.url])
