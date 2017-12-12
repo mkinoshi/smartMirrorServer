@@ -1,3 +1,5 @@
+// import { valid } from '../../../Library/Caches/typescript/2.6/node_modules/@types/joi';
+
 "use strict";
 
 var express = require('express');
@@ -95,12 +97,12 @@ router.get('/email', function(req, res) {
     } else {
       oauth2Client.credentials = JSON.parse(token);
       listLabels(oauth2Client, res, rssSource);
-      listEvents(oauth2Client)
+      // listEvents(oauth2Client)
     }
   })
 })
 
-var getNewToken = function(oauth2Client, callback, res) {
+function getNewToken(oauth2Client, callback, res) {
   var authUrl = oauth2Client.generateAuthUrl({
     access_type: 'offline',
     scope: SCOPES
@@ -124,7 +126,7 @@ var getNewToken = function(oauth2Client, callback, res) {
   });
 }
 
-var storeToken = function(token) {
+function storeToken(token) {
   try {
     fs.mkdirSync(TOKEN_DIR);
   } catch (err) {
@@ -136,74 +138,118 @@ var storeToken = function(token) {
   console.log('Token stored to ' + TOKEN_PATH);
 }
 
-var listLabels = function(auth, res, rssSource) {
-  var gmail = google.gmail('v1');
+function listLabels(auth, res, rssSource) {
   //Need to remove my old (bad) time code in favor of makoto's good time code!
   var messages_snippet = [];
-  var dt = new Date();
-  var ampm = 'pm';
-  if (dt.getHours() / 12 < 1) {
-    ampm = 'am'
-  }
-  var curTime = ((dt.getHours()) % 12) + ":" + zeroFill(dt.getMinutes(),2) + ' '+ ampm;
-  var curDate = dt.getDate() + "-" + dt.getMonth() + "-" + dt.getFullYear();
-  gmail.users.messages.list({
-    auth: auth,
-    userId: 'me',
-    maxResults: 10,
-    q:'is:unread',
-  }, function(err, response) {
-    if (err) {
-      console.log('The API returned an error: ' + err);
-      return;
-    }
-    var messages = response.messages;
-    if (messages == null) {
-      console.log('No messages found.');
-      res.render('email',{message: '', time:curTime, date: curDate})
-    } else {
-      var promises = [];
-      messages.forEach((mes) => {
-        promises.push(getEachMessage(auth, mes.id, messages_snippet))
-      })
-      Promise.all(promises)
-      .then(() => {
-        console.log('Emails Obtained!')
-        //console.log(messages_snippet);
-        weather.find({search: 'Waterville, ME', degreeType: 'F'}, function(err, result) {
-          if(err) {
-            res.status(400).send({"error": "could not save data"})
-          } else {
-            console.log(result[0].forecast)
-            const weather = {
-              low: result[0].forecast[0].low,
-              high: result[0].forecast[0].high,
-              text: result[0].forecast[0].skytextday
-            }
-              // var rssSource = 'techcrunch'; //Read more lines here
-            axios.get('https://newsapi.org/v2/top-headlines?sources=' + rssSource + '&apiKey=' + rss_API)
-            .then((results) => {
-              console.log(results.data.articles)
-              var articles = results.data.articles.map((data) => [data.title, data.url])
-              res.render('email', {message: messages_snippet, time:curTime, date: curDate, weather: weather, articles: articles})
-            })
-            .catch((err) => {
-              console.log(err)
-            })
-
-          }
-        })
-      })
-      .catch((err) => {
-        console.log(err);
-        console.log('Oops')
-      })
-
-    }
-  });
+  var weatherResult = {};
+  var messagesInfo;
+  var eventInfo;
+  var weatherInfo;
+  var newsInfo;
+  getAllMessages(auth)
+  .catch((err) => {
+  })
+  .then((returnedMessages) => {
+    console.log('it should be here')
+    messagesInfo = returnedMessages ? returnedMessages : [];
+    return getEvents(auth)
+  })
+  .catch((err) => {
+  })
+  .then((returnedCalender) => {
+    eventInfo = returnedCalender ? returnedCalender : [];
+    return getWeather()
+  })
+  .catch((err) => {
+  })
+  .then((returnedWeatherInfo) => {
+    weatherInfo = returnedWeatherInfo ? returnedWeatherInfo : {}
+    return getNews(rssSource)
+  })
+  .catch((err) => {
+  })
+  .then((returnedNews) => {
+    newsInfo = returnedNews ? returnedNews : [];
+    res.render('email', {message: messagesInfo, weather: weather, articles: newsInfo})
+  })
 }
 
-var getEachMessage = function(auth, messageId, messages) {
+// get all of the messages
+function getAllMessages (auth) {
+  var gmail = google.gmail('v1');
+  return new Promise((resolve, reject) => {
+    getMessagesList(auth, gmail)
+    .then((messages) => {
+      var promises = [];
+      messages.forEach((mes) => {
+        promises.push(getEachMessage(auth, mes.id))
+      })
+      return Promise.all(promises)
+    })
+    .then((messages) => {
+      console.log('it is here ')
+      console.log(messages)
+      resolve(messages)
+    })
+    .catch((err) => {
+      console.log(err)
+      reject(new Error("mail"));
+    })
+  })
+}
+// return the list of messages
+function getMessagesList (auth, gmail) {
+  return new Promise((resolve, reject) => {
+    gmail.users.messages.list({
+      auth: auth,
+      userId: 'me',
+      maxResults: 10,
+      q:'is:unread',
+    }, function(err, response) {
+      if (err) {
+        throw new Error("mail");
+      } else {
+        resolve(response.messages)
+      }
+    })
+  })
+}
+
+// return weather information
+function getWeather() {
+  return new Promise(function(resolve, reject) {
+    weather.fin({search: 'Waterville, ME', degreeType: 'F'}, function(err, result) {
+      if(err) {
+        console.log(err)
+        reject(new Error("weather"));
+      } else {
+        const weatherInfo = {
+          low: result[0].forecast[0].low,
+          high: result[0].forecast[0].high,
+          text: result[0].forecast[0].skytextday
+        }
+        resolve(weatherInfo)
+      }
+    })
+  })
+}
+
+// return news headline
+function getNews(rssSource) {
+  return new Promise((resolve, reject) => {
+    axios.get('https://newsapi.org/v2/top-headlines?sources=' + rssSource + '&apiKey=' + rss_API)
+    .then((results) => {
+      var articles = results.data.articles.map((data) => [data.title, data.url])
+      resolve(articles)
+    })
+    .catch((err) => {
+      console.log(err)
+      reject(new Error("news"));
+    })
+  })
+}
+
+function getEachMessage(auth, messageId) {
   var gmail = google.gmail('v1');
   return new Promise(function(resolve, reject) {
     gmail.users.messages.get({
@@ -212,20 +258,52 @@ var getEachMessage = function(auth, messageId, messages) {
       'id': messageId,
       'format': 'metadata'
     }, function(err, response) {
-      if (err) console.log(err)
+      if (err) {
+        throw new Error("mail");
+      }
       //console.log(response.payload.headers)
-      messages.push([response.payload.headers.find(findHeader)["value"],response.snippet,response.payload.headers.find(findAuthor)["value"]]);
-      resolve();
+      // messages.push([response.payload.headers.find(findHeader)["value"],response.snippet,response.payload.headers.find(findAuthor)["value"]]);
+      resolve([response.payload.headers.find(findHeader)["value"],response.snippet,response.payload.headers.find(findAuthor)["value"]]);
     })
   })
 }
-module.exports = router;
+
+function getEvents(auth) {
+  return new Promise((resolve, reject) => {
+    var calendar = google.calendar('v3');
+    calendar.events.list({
+      auth: auth,
+      calendarId: 'primary',
+      timeMin: (new Date()).toISOString(),
+      maxResults: 10,
+      singleEvents: true,
+      orderBy: 'startTime'
+    }, function(err, response) {
+      if (err) {
+        console.log('The API returned an error: ' + err);
+        reject(new Error('calender'))
+      } else {
+        console.log('Upcoming 10 events:');
+        result = [];
+        for (var i = 0; i < events.length; i++) {
+          var event = events[i];
+          var start = event.start.dateTime || event.start.date;
+          console.log('%s - %s', start, event.summary);
+          result.push([start, event.summary])
+        }
+        console.log(result);
+        resolve(result)
+      }
+    });
+  })
+}
 function findHeader(element) {
   return element['name']=='Subject';
 }
 function findAuthor(element) {
   return element['name']=='From';
 }
+
 function zeroFill( number, width )
 {
   width -= number.toString().length;
@@ -236,30 +314,6 @@ function zeroFill( number, width )
   return number + ""; // always return a string
 }
 
-function listEvents(auth) {
-  var calendar = google.calendar('v3');
-  calendar.events.list({
-    auth: auth,
-    calendarId: 'primary',
-    timeMin: (new Date()).toISOString(),
-    maxResults: 10,
-    singleEvents: true,
-    orderBy: 'startTime'
-  }, function(err, response) {
-    if (err) {
-      console.log('The API returned an error: ' + err);
-      return;
-    }
-    var events = response.items;
-    if (events.length == 0) {
-      console.log('No upcoming events found.');
-    } else {
-      console.log('Upcoming 10 events:');
-      for (var i = 0; i < events.length; i++) {
-        var event = events[i];
-        var start = event.start.dateTime || event.start.date;
-        console.log('%s - %s', start, event.summary);
-      }
-    }
-  });
-}
+
+
+module.exports = router;
