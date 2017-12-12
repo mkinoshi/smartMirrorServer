@@ -46,7 +46,7 @@ router.get('/', function(req, res) {
   }
   weather.find({search: 'Waterville, ME', degreeType: 'F'}, function(err, result) {
     if (err && ind === 0) {
-      var weather = {
+      var weatherInfo = {
         low: '?',
         high: '?',
         text: '?',
@@ -54,7 +54,7 @@ router.get('/', function(req, res) {
       h = -1;
       m = -1;
     } else if (err) {
-      var weather = {
+      var weatherInfo = {
         low: '?',
         high: '?',
         text: '?',
@@ -64,14 +64,14 @@ router.get('/', function(req, res) {
       m = -1;
     } else {
       //console.log(result[0].forecast)
-      var weather = {
+      var weatherInfo = {
         low: result[0].forecast[0].low,
         high: result[0].forecast[0].high,
         text: result[0].forecast[0].skytextday
       }
       //console.log(weather)
     }
-    res.render('initial', {weather: weather, hour: h, minute: m})
+    res.render('initial', {weather: weatherInfo, hour: h, minute: m})
   });
 })
 
@@ -175,7 +175,7 @@ function getPersonalInfo(auth, res, rssSource) {
   .then((returnedNews) => {
     newsInfo = returnedNews ? returnedNews : [];
     var curDate = getTime()
-    res.render('email', {date: curDate, message: messagesInfo, weather: weather, articles: newsInfo, events: eventInfo})
+    res.render('email', {date: curDate, message: messagesInfo, weather: weatherInfo, articles: newsInfo, events: eventInfo})
   })
 }
 
@@ -202,8 +202,6 @@ function getAllMessages (auth) {
       return Promise.all(promises)
     })
     .then((messages) => {
-      console.log('it is here ')
-      console.log(messages)
       resolve(messages)
     })
     .catch((err) => {
@@ -233,7 +231,7 @@ function getMessagesList (auth, gmail) {
 // return weather information
 function getWeather() {
   return new Promise(function(resolve, reject) {
-    weather.fin({search: 'Waterville, ME', degreeType: 'F'}, function(err, result) {
+    weather.find({search: 'Waterville, ME', degreeType: 'F'}, function(err, result) {
       if(err) {
         console.log(err)
         reject(new Error("weather"));
