@@ -97,8 +97,7 @@ router.get('/email', function(req, res) {
       getNewToken(oauth2Client, listLabels, res);
     } else {
       oauth2Client.credentials = JSON.parse(token);
-      listLabels(oauth2Client, res, rssSource);
-      // listEvents(oauth2Client)
+      getPersonalInfo(oauth2Client, res, rssSource);
     }
   })
 })
@@ -139,7 +138,7 @@ function storeToken(token) {
   console.log('Token stored to ' + TOKEN_PATH);
 }
 
-function listLabels(auth, res, rssSource) {
+function getPersonalInfo(auth, res, rssSource) {
   //Need to remove my old (bad) time code in favor of makoto's good time code!
   var messages_snippet = [];
   var weatherResult = {};
@@ -159,12 +158,18 @@ function listLabels(auth, res, rssSource) {
   })
   .then((returnedCalender) => {
     eventInfo = returnedCalender ? returnedCalender : [];
+    console.log(eventInfo)
     return getWeather()
   })
   .catch((err) => {
   })
   .then((returnedWeatherInfo) => {
-    weatherInfo = returnedWeatherInfo ? returnedWeatherInfo : {}
+    var unloadedWeather = {
+      low: '?',
+      high: '?',
+      text: '?',
+    };
+    weatherInfo = returnedWeatherInfo ? returnedWeatherInfo : unloadedWeather
     return getNews(rssSource)
   })
   .catch((err) => {
@@ -272,11 +277,11 @@ function getEachMessage(auth, messageId) {
 
     }, function(err, response) {
       if (err) {
-        throw new Error("mail");
+        reject(new Error("mail"));
       }
       //console.log(response.payload.headers)
       // messages.push([response.payload.headers.find(findHeader)["value"],response.snippet,response.payload.headers.find(findAuthor)["value"]]);
-      messages.push([response.payload.headers.find(findHeader)["value"],entities.decode(response.snippet),response.payload.headers.find(findAuthor)["value"],response.payload.headers.find(findDate)["value"]]);
+      resolve([response.payload.headers.find(findHeader)["value"],entities.decode(response.snippet),response.payload.headers.find(findAuthor)["value"],response.payload.headers.find(findDate)["value"]]);
     })
   })
 }
@@ -296,6 +301,7 @@ function getEvents(auth) {
         console.log('The API returned an error: ' + err);
         reject(new Error('calender'))
       } else {
+        console.log(response)
         console.log('Upcoming 10 events:');
         result = [];
         for (var i = 0; i < events.length; i++) {
