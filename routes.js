@@ -12,7 +12,8 @@ var readline = require('readline');
 var google = require('googleapis');
 var googleAuth = require('google-auth-library');
 var path = require("path");
-
+const Entities = require('html-entities').AllHtmlEntities; //For decoding html entities
+const entities = new Entities();
 var publicPath = path.resolve(__dirname, 'public');
 var rss_API = "cfa213fae8474a5f9af9a436ad71c1a5"
 // Serve this path with the Express static file middleware.
@@ -60,13 +61,13 @@ router.get('/', function(req, res) {
       h = -1;
       m = -1;
     } else {
-      console.log(result[0].forecast)
+      //console.log(result[0].forecast)
       var weather = {
         low: result[0].forecast[0].low,
         high: result[0].forecast[0].high,
         text: result[0].forecast[0].skytextday
       }
-      console.log(weather)
+      //console.log(weather)
     }
     res.render('initial', {weather: weather, hour: h, minute: m})
   });
@@ -159,7 +160,7 @@ var listLabels = function(auth, res, rssSource) {
     }
     var messages = response.messages;
     if (messages == null) {
-      console.log('No messages found.');
+      console.log('No messages found.'); //Fix this area, if no messages that's okay and we still need the rest of the User Interface
       res.render('email',{message: '', time:curTime, date: curDate})
     } else {
       var promises = [];
@@ -169,12 +170,13 @@ var listLabels = function(auth, res, rssSource) {
       Promise.all(promises)
       .then(() => {
         console.log('Emails Obtained!')
+
         //console.log(messages_snippet);
         weather.find({search: 'Waterville, ME', degreeType: 'F'}, function(err, result) {
           if(err) {
             res.status(400).send({"error": "could not save data"})
           } else {
-            console.log(result[0].forecast)
+            //console.log(result[0].forecast)
             const weather = {
               low: result[0].forecast[0].low,
               high: result[0].forecast[0].high,
@@ -183,9 +185,10 @@ var listLabels = function(auth, res, rssSource) {
               // var rssSource = 'techcrunch'; //Read more lines here
             axios.get('https://newsapi.org/v2/top-headlines?sources=' + rssSource + '&apiKey=' + rss_API)
             .then((results) => {
-              console.log(results.data.articles)
+              //console.log(results.data.articles)
+
               var articles = results.data.articles.map((data) => [data.title, data.url])
-              res.render('email', {message: messages_snippet, time:curTime, date: curDate, weather: weather, articles: articles})
+              res.render('email', {message: messages_snippet, time:curTime, date: curDate, weather: weather, articles: articles, source: rssSource})
             })
             .catch((err) => {
               console.log(err)
@@ -210,22 +213,34 @@ var getEachMessage = function(auth, messageId, messages) {
       auth: auth,
       'userId': 'me',
       'id': messageId,
-      'format': 'metadata'
+      'format': 'metadata',
+
     }, function(err, response) {
       if (err) console.log(err)
       //console.log(response.payload.headers)
-      messages.push([response.payload.headers.find(findHeader)["value"],response.snippet,response.payload.headers.find(findAuthor)["value"]]);
+      messages.push([response.payload.headers.find(findHeader)["value"],entities.decode(response.snippet),response.payload.headers.find(findAuthor)["value"],response.payload.headers.find(findDate)["value"]]);
       resolve();
     })
   })
 }
 module.exports = router;
+
+//This specific function is for finding a special object from a list of objects with the name 'Subject'
 function findHeader(element) {
   return element['name']=='Subject';
 }
+
+//This specific function is for finding a special object from a list of objects with the name 'Date'
+function findDate(element) {
+  return element['name']=='Date';
+}
+
+//This specific function is for finding a special object from a list of objects with the name 'From'
 function findAuthor(element) {
   return element['name']=='From';
 }
+
+//This function add a leading number of zeros up to a certain point
 function zeroFill( number, width )
 {
   width -= number.toString().length;
@@ -235,6 +250,7 @@ function zeroFill( number, width )
   }
   return number + ""; // always return a string
 }
+
 
 function listEvents(auth) {
   var calendar = google.calendar('v3');
