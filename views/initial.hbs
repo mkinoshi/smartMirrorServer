@@ -9,10 +9,36 @@
                 <span id="weather"><span class="light">Low</span> · <b>{{weather.low}} F </b></span>
                 <span class="light">High</span> · <b>{{weather.high}} F </b></a></span>
                 <span class="light">Weather</span> · <b>{{weather.text}}</b></a></span>
-                <span id="day">Wednesday, November 29 · <b id="time">10:42:16</b> <span class="light" id="timePrefix">am</span></span>
+                <span id="day"><b id="time"></b> <span class="light" id="timePrefix"></span></span>
             </div>
         </div>
     </div>
 </header>
 </div>
+<script>
+    var alarm = new Date();
+    var hour = {{hour}}
+    var minute = {{minute}}
+    if (hour !== -1 && minute !== -1) {
+        console.log('it is heree');
+        alarm.setHours(hour, minute, 0);
+        console.log(alarm)
+        var ind = 0;
+        var audio = new Audio('http://localhost:3000/audio/audio.mp3');
+        setInterval(function() {
+            var now = new Date();
+            var dif = (now.getTime() - alarm.getTime())/1000;
+            console.log(dif)
+            if (dif >= -3 && dif <= 30 && ind === 0) {
+                ind = 1;
+                audio.play();
+            } else if ((dif < -3 || dif > 30) && ind === 1) {
+                ind = 0;
+                audio.pause();
+                audio.currentTime = 0;
+            }
+        }, 1000)
+        
+    }
+</script>
 <script src="http://localhost:3000/js/initial.js"></script>

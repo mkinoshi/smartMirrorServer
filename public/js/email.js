@@ -5,9 +5,10 @@ $( document ).ready(function() {
     var month = (today.getMonth() + 1 ) + "/" + today.getDate();
     var ind = today.getDay();
     var day = days[ind]
-    var h = today.getHours();
-    var m = today.getMinutes();
-    var s = today.getSeconds();
+    var h = today.getHours().toString().length === 1 ? '0' + today.getHours() : today.getHours();
+    var m = today.getMinutes().toString().length === 1 ? '0' + today.getMinutes() : today.getMinutes();
+    var s = today.getSeconds().toString().length === 1 ? '0' + today.getSeconds() : today.getSeconds();
+
     console.log(today)
     $("#day")[0].innerHTML = month + " - " + h + ":" + m + ":" + s; 
   }, 1000)

@@ -15,7 +15,6 @@ $( document ).ready(function() {
     var h = today.getHours();
     var m = today.getMinutes();
     var s = today.getSeconds();
-    console.log(today)
     $("#day")[0].innerHTML = month + " - " + h + ":" + m + ":" + s; 
   }, 1000)
   var socket = io();  

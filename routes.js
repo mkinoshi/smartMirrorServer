@@ -29,19 +29,46 @@ var SCOPES = ['https://www.googleapis.com/auth/gmail.readonly','https://www.goog
 var axios = require('axios');
 
 router.get('/', function(req, res) {
+  var ind = 0;
+  try {
+    ind = 1;
+    var data = fs.readFileSync('alarm.txt', 'utf8');
+    var array = data.match(/[^\s]+/g);
+    var data = array[0].split(':')
+    var h = data[0]
+    var m = data[1]
+  } catch(e) {
+    ind = 0 
+    // console.log('Error:', e.stack); //Make it not start with an error message
+  }
   weather.find({search: 'Waterville, ME', degreeType: 'F'}, function(err, result) {
-    if(err) {
-      res.status(400).send({"error": "could not save data"})
+    if (err && ind === 0) {
+      var weather = {
+        low: '?',
+        high: '?',
+        text: '?',
+      }
+      h = -1;
+      m = -1;
+    } else if (err) {
+      var weather = {
+        low: '?',
+        high: '?',
+        text: '?',
+      }
+    } else if (ind === 0) {
+      h = -1;
+      m = -1;
     } else {
       console.log(result[0].forecast)
-      const weather = {
+      var weather = {
         low: result[0].forecast[0].low,
         high: result[0].forecast[0].high,
         text: result[0].forecast[0].skytextday
       }
       console.log(weather)
-      res.render('initial', {weather: weather})
     }
+    res.render('initial', {weather: weather, hour: h, minute: m})
   });
 })
 
@@ -57,7 +84,7 @@ router.get('/email', function(req, res) {
   var clientId =  array[1];
   var redirectUrl =  array[2];
   var rssSource =  array[3];
-
+  var alarmTime = array[4];
   var auth = new googleAuth();
   var oauth2Client = new auth.OAuth2(clientId, clientSecret, redirectUrl);
 
@@ -67,7 +94,7 @@ router.get('/email', function(req, res) {
       getNewToken(oauth2Client, listLabels, res);
     } else {
       oauth2Client.credentials = JSON.parse(token);
-      listLabels(oauth2Client, res);
+      listLabels(oauth2Client, res, rssSource);
       listEvents(oauth2Client)
     }
   })
@@ -109,7 +136,7 @@ var storeToken = function(token) {
   console.log('Token stored to ' + TOKEN_PATH);
 }
 
-var listLabels = function(auth, res) {
+var listLabels = function(auth, res, rssSource) {
   var gmail = google.gmail('v1');
   //Need to remove my old (bad) time code in favor of makoto's good time code!
   var messages_snippet = [];
@@ -153,7 +180,7 @@ var listLabels = function(auth, res) {
               high: result[0].forecast[0].high,
               text: result[0].forecast[0].skytextday
             }
-              var rssSource = 'techcrunch'; //Read more lines here
+              // var rssSource = 'techcrunch'; //Read more lines here
             axios.get('https://newsapi.org/v2/top-headlines?sources=' + rssSource + '&apiKey=' + rss_API)
             .then((results) => {
               console.log(results.data.articles)
