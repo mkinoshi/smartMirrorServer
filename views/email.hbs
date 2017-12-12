@@ -22,7 +22,7 @@
                         <a href="#" class="list-group-item list-group-item-action flex-column align-items-start">
                           <div class="d-flex w-100 justify-content-between">
                             <h3 class="mb-1">{{ this.[0] }}</h3>
-                            <h5>From: {{this.[2]}}</h5>
+                            <h5>From: {{this.[2]}} @ {{this.[3]}}</h5>
                             <small class="text-muted">{{ this.[1] }}</small>
                           </div>
                         </a>
@@ -34,20 +34,27 @@
                     </div>
                     </ul>
                 </div>
-                <div class="four columns feature" data-feature="todo">
-                    <div class="list-heading">Calender</div>
-                    <ul id="todos">
-                    </ul>
+                <div class="four columns feature" data-feature="fill">
+                  <p> </p>
                 </div>
                 <div class="four columns feature" data-feature="news">
+                  <div class="list-heading">News</div><span class="light" id="news-source"> via {{source}}</span>
                     <ul id="news">
                         {{!-- <li class="heading">
                             News <span class="light" id="news-source"> via Tech Crunch</span>
                         </li> --}}
-                        <div class="list-heading">News</div><span class="light" id="news-source"> via Tech Crunch</span>
+
                         {{#each articles}}
-                        <li><a href={{this.[0]}}>{{this.[1]}}</a></li>
+                        <li><a href={{this.[1]}}>{{this.[0]}}</a></li>
                         {{/each}}
+                    </ul>
+                    <div class="list-heading">Calendar</div>
+                    <ul class="list-group">
+                      {{#each events}}
+                        <li class="list-group-item">{{this.[0]}}</li>
+                        {{/each}}
+                      </ul>
+                    <ul id="todos">
                     </ul>
                 </div>
             </div>

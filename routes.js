@@ -14,7 +14,8 @@ var readline = require('readline');
 var google = require('googleapis');
 var googleAuth = require('google-auth-library');
 var path = require("path");
-
+const Entities = require('html-entities').AllHtmlEntities; //For decoding html entities
+const entities = new Entities();
 var publicPath = path.resolve(__dirname, 'public');
 var rss_API = "cfa213fae8474a5f9af9a436ad71c1a5"
 // Serve this path with the Express static file middleware.
@@ -40,7 +41,7 @@ router.get('/', function(req, res) {
     var h = data[0]
     var m = data[1]
   } catch(e) {
-    ind = 0 
+    ind = 0
     // console.log('Error:', e.stack); //Make it not start with an error message
   }
   weather.find({search: 'Waterville, ME', degreeType: 'F'}, function(err, result) {
@@ -62,13 +63,13 @@ router.get('/', function(req, res) {
       h = -1;
       m = -1;
     } else {
-      console.log(result[0].forecast)
+      //console.log(result[0].forecast)
       var weather = {
         low: result[0].forecast[0].low,
         high: result[0].forecast[0].high,
         text: result[0].forecast[0].skytextday
       }
-      console.log(weather)
+      //console.log(weather)
     }
     res.render('initial', {weather: weather, hour: h, minute: m})
   });
@@ -86,7 +87,7 @@ router.get('/email', function(req, res) {
   var clientId =  array[1];
   var redirectUrl =  array[2];
   var rssSource =  array[3];
-  var alarmTime = array[4];
+  //var alarmTime = array[4];
   var auth = new googleAuth();
   var oauth2Client = new auth.OAuth2(clientId, clientSecret, redirectUrl);
 
@@ -170,10 +171,21 @@ function listLabels(auth, res, rssSource) {
   })
   .then((returnedNews) => {
     newsInfo = returnedNews ? returnedNews : [];
-    res.render('email', {message: messagesInfo, weather: weather, articles: newsInfo})
+    var curDate = getTime()
+    res.render('email', {date: curDate, message: messagesInfo, weather: weather, articles: newsInfo})
   })
 }
 
+// get the current time
+function getTime() {
+  var dt = new Date();
+  var ampm = 'pm';
+  if (dt.getHours() / 12 < 1) {
+    ampm = 'am'
+  }
+  var curTime = ((dt.getHours()) % 12) + ":" + zeroFill(dt.getMinutes(),2) + ' '+ ampm;
+  return dt.getDate() + "-" + dt.getMonth() + "-" + dt.getFullYear();
+}
 // get all of the messages
 function getAllMessages (auth) {
   var gmail = google.gmail('v1');
@@ -256,14 +268,15 @@ function getEachMessage(auth, messageId) {
       auth: auth,
       'userId': 'me',
       'id': messageId,
-      'format': 'metadata'
+      'format': 'metadata',
+
     }, function(err, response) {
       if (err) {
         throw new Error("mail");
       }
       //console.log(response.payload.headers)
       // messages.push([response.payload.headers.find(findHeader)["value"],response.snippet,response.payload.headers.find(findAuthor)["value"]]);
-      resolve([response.payload.headers.find(findHeader)["value"],response.snippet,response.payload.headers.find(findAuthor)["value"]]);
+      messages.push([response.payload.headers.find(findHeader)["value"],entities.decode(response.snippet),response.payload.headers.find(findAuthor)["value"],response.payload.headers.find(findDate)["value"]]);
     })
   })
 }
@@ -300,10 +313,18 @@ function getEvents(auth) {
 function findHeader(element) {
   return element['name']=='Subject';
 }
+
+//This specific function is for finding a special object from a list of objects with the name 'Date'
+function findDate(element) {
+  return element['name']=='Date';
+}
+
+//This specific function is for finding a special object from a list of objects with the name 'From'
 function findAuthor(element) {
   return element['name']=='From';
 }
 
+//This function add a leading number of zeros up to a certain point
 function zeroFill( number, width )
 {
   width -= number.toString().length;
