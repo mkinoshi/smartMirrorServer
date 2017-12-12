@@ -46,12 +46,21 @@
 
                         {{#each articles}}
                         <li><a href={{this.[1]}}>{{this.[0]}}</a></li>
+                        {{else}}
+                        <div class="alert alert-danger" role="alert">
+                      No RSS Updates!
+                      </div>
                         {{/each}}
                     </ul>
                     <div class="list-heading">Calendar</div>
                     <ul class="list-group">
                       {{#each events}}
-                        <li class="list-group-item">{{this.[0]}}</li>
+                        <li class="list-group-item"><h3>{{this.[1]}}</h3>
+                          <h5>@{{this.[0]}}</h5></li>
+                          {{else}}
+                          <div class="alert alert-danger" role="alert">
+                        No Events for Today!
+                        </div>
                         {{/each}}
                       </ul>
                     <ul id="todos">
