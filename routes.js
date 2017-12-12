@@ -38,7 +38,7 @@ router.get('/', function(req, res) {
     var h = data[0]
     var m = data[1]
   } catch(e) {
-    ind = 0 
+    ind = 0
     // console.log('Error:', e.stack); //Make it not start with an error message
   }
   weather.find({search: 'Waterville, ME', degreeType: 'F'}, function(err, result) {
@@ -84,7 +84,7 @@ router.get('/email', function(req, res) {
   var clientId =  array[1];
   var redirectUrl =  array[2];
   var rssSource =  array[3];
-  var alarmTime = array[4];
+  //var alarmTime = array[4];
   var auth = new googleAuth();
   var oauth2Client = new auth.OAuth2(clientId, clientSecret, redirectUrl);
 
