@@ -277,7 +277,7 @@ function getEachMessage(auth, messageId) {
       }
       //console.log(response.payload.headers)
       // messages.push([response.payload.headers.find(findHeader)["value"],response.snippet,response.payload.headers.find(findAuthor)["value"]]);
-      resolve([snipString(response.payload.headers.find(findHeader)["value"]),entities.decode(response.snippet),response.payload.headers.find(findAuthor)["value"],response.payload.headers.find(findDate)["value"]]);
+      resolve([snipString(response.payload.headers.find(findHeader)["value"],'title'),entities.decode(response.snippet),response.payload.headers.find(findAuthor)["value"],response.payload.headers.find(findDate)["value"]]);
     })
   })
 }
@@ -309,7 +309,7 @@ function getEvents(auth) {
           var event = events[i];
           console.log(event);
           var start = event.start.dateTime || event.start.date;
-          result.push([start, snipString(event.summary), snipString(event.location)])
+          result.push([start, snipString(event.summary, 'title'), snipString(event.location, 'title')])
         }
         resolve(result)
       }
@@ -341,9 +341,12 @@ function zeroFill( number, width )
   }
   return number + ""; // always return a string
 }
-function snipString(stringToSnip) {
-  if(stringToSnip.length > 50) {
+function snipString(stringToSnip, typeOfString) {
+  if(stringToSnip.length > 50 && typeOfString =='title') {
     return stringToSnip.slice(0,50) + '...';
+  }
+  else if(stringToSnip.length > 100 && typeOfString =='summary') {
+    return stringToSnip.slice(0,100) + '...';
   }
   else {
     return stringToSnip
