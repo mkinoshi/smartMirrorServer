@@ -302,7 +302,7 @@ function getEvents(auth) {
     });
   })
 }
-
+//The code below looks unclean, but because of how the find function works in javascript, we cannot have two parameters, and hence need 3 different functions
 //This specific function is for finding a special object from a list of objects with the name 'Subject'
 function findHeader(element) {
   return element['name']=='Subject';
@@ -327,6 +327,28 @@ function zeroFill( number, width ) {
   }
   return number + ""; // always return a string
 }
+
+/* 2 Not good functions (Need to take null into account, and could pull both of these methods together into one, like below)
+function snipTitle(stringToSnip) {
+  if(stringToSnip.length > 50) {
+    return stringToSnip.slice(0,50) + '...';
+  }
+  else {
+    return stringToSnip
+  }
+}
+function snipSummary(stringToSnip) {
+  if(stringToSnip.length > 100) {
+    return stringToSnip.slice(0,100) + '...';
+  }
+  else {
+    return stringToSnip
+  }
+}
+
+
+*/
+
 
 function snipString(stringToSnip, typeOfString) {
   if(stringToSnip != null) {
