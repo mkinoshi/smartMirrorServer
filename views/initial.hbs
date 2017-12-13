@@ -19,16 +19,14 @@
     var alarm = new Date();
     var hour = {{hour}}
     var minute = {{minute}}
+    // play alarm at a proper time specified by hour and minute
     if (hour !== -1 && minute !== -1) {
-        console.log('it is heree');
         alarm.setHours(hour, minute, 0);
-        console.log(alarm)
         var ind = 0;
         var audio = new Audio('http://localhost:3000/audio/audio.mp3');
         setInterval(function() {
             var now = new Date();
             var dif = (now.getTime() - alarm.getTime())/1000;
-            console.log(dif)
             if (dif >= -3 && dif <= 57 && ind === 0) {
                 ind = 1;
                 audio.play();
@@ -38,7 +36,6 @@
                 audio.currentTime = 0;
             }
         }, 1000)
-        
     }
 </script>
 <script src="http://localhost:3000/js/initial.js"></script>
