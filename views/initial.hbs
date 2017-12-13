@@ -29,10 +29,10 @@
             var now = new Date();
             var dif = (now.getTime() - alarm.getTime())/1000;
             console.log(dif)
-            if (dif >= -3 && dif <= 30 && ind === 0) {
+            if (dif >= -3 && dif <= 57 && ind === 0) {
                 ind = 1;
                 audio.play();
-            } else if ((dif < -3 || dif > 30) && ind === 1) {
+            } else if ((dif < -3 || dif > 57) && ind === 1) {
                 ind = 0;
                 audio.pause();
                 audio.currentTime = 0;
