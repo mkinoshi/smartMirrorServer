@@ -1,5 +1,3 @@
-// import { valid } from '../../../Library/Caches/typescript/2.6/node_modules/@types/joi';
-
 "use strict";
 
 var express = require('express');
@@ -18,9 +16,6 @@ const Entities = require('html-entities').AllHtmlEntities; //For decoding html e
 const entities = new Entities();
 var publicPath = path.resolve(__dirname, 'public');
 var rss_API = "cfa213fae8474a5f9af9a436ad71c1a5"
-// Serve this path with the Express static file middleware.
-// var app = express();
-// app.use(express.static(publicPath));
 var fs = require('fs');
 
 
@@ -93,7 +88,6 @@ router.get('/email', function(req, res) {
   var oauth2Client = new auth.OAuth2(clientId, clientSecret, redirectUrl);
 
   fs.readFile(TOKEN_PATH, function(err, token) {
-    //console.log(res)
     if (err) {
       getNewToken(oauth2Client, listLabels, res);
     } else {
@@ -103,6 +97,7 @@ router.get('/email', function(req, res) {
   })
 })
 
+// when it is the first time to connect Google API, it gets a new Token
 function getNewToken(oauth2Client, callback, res) {
   var authUrl = oauth2Client.generateAuthUrl({
     access_type: 'offline',
@@ -127,6 +122,7 @@ function getNewToken(oauth2Client, callback, res) {
   });
 }
 
+// once it gets a new token, it stores tha token as a text file
 function storeToken(token) {
   try {
     fs.mkdirSync(TOKEN_DIR);
@@ -139,8 +135,8 @@ function storeToken(token) {
   console.log('Token stored to ' + TOKEN_PATH);
 }
 
+// get all of the personal information including emails, calendar, and news source preference
 function getPersonalInfo(auth, res, rssSource) {
-  //Need to remove my old (bad) time code in favor of makoto's good time code!
   var messages_snippet = [];
   var weatherResult = {};
   var messagesInfo;
@@ -148,9 +144,9 @@ function getPersonalInfo(auth, res, rssSource) {
   var weatherInfo;
   var newsInfo;
   getAllMessages(auth)
-  .catch((err) => {
+  .catch((err) => {  // if there is an error, it goes here
   })
-  .then((returnedMessages) => {
+  .then((returnedMessages) => { // if not, wait the above function to finish and run this part
     messagesInfo = returnedMessages ? returnedMessages : [];
     return getEvents(auth)
   })
@@ -176,7 +172,6 @@ function getPersonalInfo(auth, res, rssSource) {
   .then((returnedNews) => {
     newsInfo = returnedNews ? returnedNews : [];
     var curDate = getTime()
-    console.log(curDate)
     res.render('email', {date: curDate, message: messagesInfo, weather: weatherInfo, articles: newsInfo, events: eventInfo, source:rssSource})
   })
 }
@@ -185,7 +180,6 @@ function getPersonalInfo(auth, res, rssSource) {
 function getTime() {
   var dt = new Date();
   var curTime = zeroFill(dt.getHours(),2) + ":" + zeroFill(dt.getMinutes(),2) + ":" + zeroFill(dt.getSeconds(),2);
-  console.log(curTime)
   return (dt.getMonth() + 1) + "/" + dt.getDate() + " - " + curTime;
 }
 // get all of the messages
@@ -227,7 +221,7 @@ function getMessagesList (auth, gmail) {
   })
 }
 
-// return weather information
+// get weather information and return weather information
 function getWeather() {
   return new Promise(function(resolve, reject) {
     weather.find({search: 'Waterville, ME', degreeType: 'F'}, function(err, result) {
@@ -274,9 +268,7 @@ function getEachMessage(auth, messageId) {
       if (err) {
         reject(new Error("mail"));
       }
-      //console.log(response.payload.headers)
-      // messages.push([response.payload.headers.find(findHeader)["value"],response.snippet,response.payload.headers.find(findAuthor)["value"]]);
-      resolve([snipString(response.payload.headers.find(findHeader)["value"],'title'),snipString(entities.decode(response.snippet),'summary'),response.payload.headers.find(findAuthor)["value"],response.payload.headers.find(findDate)["value"]]);
+      resolve([response.payload.headers.find(findHeader)["value"],entities.decode(response.snippet),response.payload.headers.find(findAuthor)["value"],response.payload.headers.find(findDate)["value"]]);
     })
   })
 }
@@ -287,8 +279,6 @@ function getEvents(auth) {
     var endOfCurrentDay = new Date();
     endOfCurrentDay.setHours(23);
     endOfCurrentDay.setMinutes(59);
-    console.log((new Date()).toISOString());
-    console.log(endOfCurrentDay);
     calendar.events.list({
       auth: auth,
       calendarId: 'primary',
@@ -296,6 +286,7 @@ function getEvents(auth) {
       maxResults: 10,
       singleEvents: true,
       orderBy: 'startTime',
+      timeMax: endOfCurrentDay,
     }, function(err, response) {
       if (err) {
         console.log('The API returned an error: ' + err);
@@ -307,7 +298,7 @@ function getEvents(auth) {
           var event = events[i];
           console.log(event);
           var start = event.start.dateTime || event.start.date;
-          result.push([start, snipString(event.summary, 'title'), snipString(event.location, 'title')])
+          result.push([start, event.summary, event.location])
         }
         resolve(result)
       }
@@ -339,17 +330,7 @@ function zeroFill( number, width )
   }
   return number + ""; // always return a string
 }
-function snipString(stringToSnip, typeOfString) {
-  if(stringToSnip.length > 50 && typeOfString =='title') {
-    return stringToSnip.slice(0,50) + '...';
-  }
-  else if(stringToSnip.length > 100 && typeOfString =='summary') {
-    return stringToSnip.slice(0,100) + '...';
-  }
-  else {
-    return stringToSnip
-  }
-}
+
 
 
 module.exports = router;
