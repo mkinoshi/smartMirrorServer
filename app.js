@@ -1,20 +1,12 @@
-//require dependencies
 //server
 var express = require('express');
 var path = require('path');
 var logger = require('morgan');
 var exphbs  = require('express-handlebars');
-//cookie
-var cookieParser = require('cookie-parser');
+//body Parser
 var bodyParser = require('body-parser');
-var session = require('express-session');
-var passport = require('passport');
-var MongoStore = require('connect-mongo')(session);
-//access to routes
-// var routes = require('./routes/index');
-var mongoose = require('mongoose');
 
-//start express server
+//start express server and socket.io
 var app = express();
 const server = require('http').Server(app);
 const io = require('socket.io')(server);
@@ -33,11 +25,8 @@ app.use(expressValidator());
 app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
-app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-
-// error handlers
 
 // development error handler
 // will print stacktrace
@@ -61,10 +50,8 @@ app.use(function(err, req, res, next) {
   });
 });
 
-// All of our routes are in routes.js
 var routes = require('./routes');
 app.post('/detected', function(req, res) {
-  console.log('here')
   if (req.body.user === 'jerry') {
   } else {
   }
@@ -73,10 +60,10 @@ app.post('/detected', function(req, res) {
 })
 
 app.post('/lost', function(req, res) {
-  console.log('here')
   io.sockets.emit("lost", null);
   res.json({'detected': false})
 })
+// All of the other routes are in routes.js
 app.use('/', routes);
 
 console.log('Express started. Listening on port', process.env.PORT || 3000);

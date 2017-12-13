@@ -1,5 +1,6 @@
 "use strict";
 
+// importing necessary packages and define global variables
 var express = require('express');
 var router = express.Router();
 var mongoose = require('mongoose');
@@ -17,58 +18,26 @@ const entities = new Entities();
 var publicPath = path.resolve(__dirname, 'public');
 var rss_API = "cfa213fae8474a5f9af9a436ad71c1a5"
 var fs = require('fs');
-
-
-
-mongoose.Promise = global.Promise;
 var TOKEN_DIR = path.resolve(__dirname) + '/.credentials/';
 var TOKEN_PATH = TOKEN_DIR + 'gmail_token.json';
 var SCOPES = ['https://www.googleapis.com/auth/gmail.readonly','https://www.googleapis.com/auth/calendar.readonly'];
 var axios = require('axios');
 
 router.get('/', function(req, res) {
-  var ind = 0;
-  try {
-    ind = 1;
-    var data = fs.readFileSync('alarm.txt', 'utf8');
-    var array = data.match(/[^\s]+/g);
-    var data = array[0].split(':')
-    var h = data[0]
-    var m = data[1]
-  } catch(e) {
-    ind = 0
-    // console.log('Error:', e.stack); //Make it not start with an error message
-  }
-  weather.find({search: 'Waterville, ME', degreeType: 'F'}, function(err, result) {
-    if (err && ind === 0) {
-      var weatherInfo = {
-        low: '?',
-        high: '?',
-        text: '?',
-      }
-      h = -1;
-      m = -1;
-    } else if (err) {
-      var weatherInfo = {
-        low: '?',
-        high: '?',
-        text: '?',
-      }
-    } else if (ind === 0) {
-      h = -1;
-      m = -1;
-    } else {
-      //console.log(result[0].forecast)
-      var weatherInfo = {
-        low: result[0].forecast[0].low,
-        high: result[0].forecast[0].high,
-        text: result[0].forecast[0].skytextday
-      }
-      //console.log(weather)
+  var returnedAlarmInfo = getAlarmInfo();
+  var curDate = getTime();
+  getWeather()
+  .catch((err) => {  // if there is an error, it goes here
+  })
+  .then((returnedWeatherInfo) => { // if not, wait the above function to finish and run this part
+    var errorWeather = {
+      low: '?',
+      high: '?',
+      text: '?',
     }
-    var curDate = getTime()
-    res.render('initial', {date: curDate, weather: weatherInfo, hour: h, minute: m})
-  });
+    var weatherInfo = returnedWeatherInfo ? returnedWeatherInfo : errorWeather;
+    res.render('initial', {date: curDate, weather: weatherInfo, hour: returnedAlarmInfo[0], minute: returnedAlarmInfo[1]})
+  })
 })
 
 router.get('/email', function(req, res) {
@@ -96,6 +65,20 @@ router.get('/email', function(req, res) {
     }
   })
 })
+
+// read a text file called alarm.txt for alarm information
+function getAlarmInfo () {
+  try {
+    var data = fs.readFileSync('alarm.txt', 'utf8');
+    var array = data.match(/[^\s]+/g);
+    var data = array[0].split(':')
+    var h = data[0]
+    var m = data[1]
+    return [h, m]
+  } catch(e) {
+    return [-1, -1]
+  }
+}
 
 // when it is the first time to connect Google API, it gets a new Token
 function getNewToken(oauth2Client, callback, res) {
@@ -293,7 +276,6 @@ function getEvents(auth) {
         var events = response.items
         for (var i = 0; i < events.length; i++) {
           var event = events[i];
-          console.log(event);
           var start = event.start.dateTime || event.start.date;
           result.push([start, event.summary, event.location])
         }
