@@ -255,6 +255,7 @@ function getNews(rssSource) {
   })
 }
 
+// Access each message and returns it
 function getEachMessage(auth, messageId) {
   var gmail = google.gmail('v1');
   return new Promise(function(resolve, reject) {
@@ -273,20 +274,16 @@ function getEachMessage(auth, messageId) {
   })
 }
 
+// Get upcoming events
 function getEvents(auth) {
   return new Promise((resolve, reject) => {
     var calendar = google.calendar('v3');
-    var endOfCurrentDay = new Date();
-    endOfCurrentDay.setHours(23);
-    endOfCurrentDay.setMinutes(59);
     calendar.events.list({
       auth: auth,
       calendarId: 'primary',
-      timeMin: (new Date()).toISOString(),
       maxResults: 10,
       singleEvents: true,
       orderBy: 'startTime',
-      timeMax: endOfCurrentDay,
     }, function(err, response) {
       if (err) {
         console.log('The API returned an error: ' + err);
@@ -305,6 +302,7 @@ function getEvents(auth) {
     });
   })
 }
+
 //This specific function is for finding a special object from a list of objects with the name 'Subject'
 function findHeader(element) {
   return element['name']=='Subject';
@@ -321,8 +319,7 @@ function findAuthor(element) {
 }
 
 //This function add a leading number of zeros up to a certain point
-function zeroFill( number, width )
-{
+function zeroFill( number, width ) {
   width -= number.toString().length;
   if ( width > 0 )
   {
