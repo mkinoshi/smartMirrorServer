@@ -269,7 +269,7 @@ function getEachMessage(auth, messageId) {
       if (err) {
         reject(new Error("mail"));
       }
-      resolve([response.payload.headers.find(findHeader)["value"],entities.decode(response.snippet),response.payload.headers.find(findAuthor)["value"],response.payload.headers.find(findDate)["value"]]);
+      resolve([snipString(response.payload.headers.find(findHeader)["value"],'title'),snipString(entities.decode(response.snippet),'summary'),response.payload.headers.find(findAuthor)["value"],response.payload.headers.find(findDate)["value"]]);
     })
   })
 }
@@ -282,6 +282,7 @@ function getEvents(auth) {
       auth: auth,
       calendarId: 'primary',
       maxResults: 10,
+      timeMin: (new Date()).toISOString(),
       singleEvents: true,
       orderBy: 'startTime',
     }, function(err, response) {
@@ -295,8 +296,7 @@ function getEvents(auth) {
           var event = events[i];
           console.log(event);
           var start = event.start.dateTime || event.start.date;
-          result.push([start, event.summary, event.location])
-        }
+          result.push([start, snipString(event.summary, 'title'), snipString(event.location, 'title')])        }
         resolve(result)
       }
     });
@@ -328,6 +328,18 @@ function zeroFill( number, width ) {
   return number + ""; // always return a string
 }
 
-
+function snipString(stringToSnip, typeOfString) {
+  if(stringToSnip != null) {
+    if(stringToSnip.length > 50 && typeOfString =='title') {
+      return stringToSnip.slice(0,50) + '...';
+    }
+    else if(stringToSnip.length > 100 && typeOfString =='summary') {
+      return stringToSnip.slice(0,100) + '...';
+    }
+    else {
+      return stringToSnip
+    }
+  }
+}
 
 module.exports = router;
