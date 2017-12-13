@@ -12,6 +12,9 @@ $( document ).ready(function() {
     console.log(today)
     $("#day")[0].innerHTML = month + " - " + h + ":" + m + ":" + s; 
   }, 1000)
+  setInterval(function() {
+    window.location.reload();
+  }, 5000)
   var socket = io();  
   socket.on('lost', function(msg){
     console.log('should change the state')

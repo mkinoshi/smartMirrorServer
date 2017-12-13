@@ -71,7 +71,8 @@ router.get('/', function(req, res) {
       }
       //console.log(weather)
     }
-    res.render('initial', {weather: weatherInfo, hour: h, minute: m})
+    var curDate = getTime()
+    res.render('initial', {date: curDate, weather: weatherInfo, hour: h, minute: m})
   });
 })
 
@@ -175,6 +176,7 @@ function getPersonalInfo(auth, res, rssSource) {
   .then((returnedNews) => {
     newsInfo = returnedNews ? returnedNews : [];
     var curDate = getTime()
+    console.log(curDate)
     res.render('email', {date: curDate, message: messagesInfo, weather: weatherInfo, articles: newsInfo, events: eventInfo, source:rssSource})
   })
 }
@@ -182,12 +184,9 @@ function getPersonalInfo(auth, res, rssSource) {
 // get the current time
 function getTime() {
   var dt = new Date();
-  var ampm = 'pm';
-  if (dt.getHours() / 12 < 1) {
-    ampm = 'am'
-  }
-  var curTime = ((dt.getHours()) % 12) + ":" + zeroFill(dt.getMinutes(),2) + ' '+ ampm;
-  return dt.getDate() + "-" + dt.getMonth() + "-" + dt.getFullYear();
+  var curTime = zeroFill(dt.getHours(),2) + ":" + zeroFill(dt.getMinutes(),2) + ":" + zeroFill(dt.getSeconds(),2);
+  console.log(curTime)
+  return (dt.getMonth() + 1) + "/" + dt.getDate() + " - " + curTime;
 }
 // get all of the messages
 function getAllMessages (auth) {
@@ -297,7 +296,6 @@ function getEvents(auth) {
       maxResults: 10,
       singleEvents: true,
       orderBy: 'startTime',
-      timeMax: endOfCurrentDay,
     }, function(err, response) {
       if (err) {
         console.log('The API returned an error: ' + err);
