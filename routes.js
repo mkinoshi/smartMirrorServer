@@ -30,7 +30,7 @@ var SCOPES = ['https://www.googleapis.com/auth/gmail.readonly','https://www.goog
 //     var h = data[0]
 //     var m = data[1]
 //   } catch(e) {
-//     ind = 0 
+//     ind = 0
 //     // console.log('Error:', e.stack); //Make it not start with an error message
 //   }
 //   weather.find({search: 'Waterville, ME', degreeType: 'F'}, function(err, result) {
@@ -159,7 +159,7 @@ function storeToken(token) {
   console.log('Token stored to ' + TOKEN_PATH);
 }
 
-// This is the code before the refactoring 
+// This is the code before the refactoring
 // function getPersonalInfo (auth, res, rssSource) {
 //   var gmail = google.gmail('v1');
 //   //Need to remove my old (bad) time code in favor of makoto's good time code!
