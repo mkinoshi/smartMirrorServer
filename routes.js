@@ -360,7 +360,7 @@ function getEachMessage(auth, messageId) {
       if (err) {
         reject(new Error("mail"));
       }
-      resolve([response.payload.headers.find(findHeader)["value"],entities.decode(response.snippet),response.payload.headers.find(findAuthor)["value"],response.payload.headers.find(findDate)["value"]]);
+      resolve([snipString(response.payload.headers.find(findHeader)["value"],'title'),snipString(entities.decode(response.snippet),'summary'),response.payload.headers.find(findAuthor)["value"],response.payload.headers.find(findDate)["value"]]);
     })
   })
 }
@@ -373,6 +373,7 @@ function getEvents(auth) {
       auth: auth,
       calendarId: 'primary',
       maxResults: 10,
+      timeMin: (new Date()).toISOString(),
       singleEvents: true,
       orderBy: 'startTime',
     }, function(err, response) {
@@ -385,14 +386,13 @@ function getEvents(auth) {
         for (var i = 0; i < events.length; i++) {
           var event = events[i];
           var start = event.start.dateTime || event.start.date;
-          result.push([start, event.summary, event.location])
-        }
+          result.push([start, snipString(event.summary, 'title'), snipString(event.location, 'title')])        }
         resolve(result)
       }
     });
   })
 }
-
+//The code below looks unclean, but because of how the find function works in javascript, we cannot have two parameters, and hence need 3 different functions
 //This specific function is for finding a special object from a list of objects with the name 'Subject'
 function findHeader(element) {
   return element['name']=='Subject';
@@ -418,6 +418,40 @@ function zeroFill( number, width ) {
   return number + ""; // always return a string
 }
 
+/* 2 Not good functions (Need to take null into account, and could pull both of these methods together into one, like below)
+function snipTitle(stringToSnip) {
+  if(stringToSnip.length > 50) {
+    return stringToSnip.slice(0,50) + '...';
+  }
+  else {
+    return stringToSnip
+  }
+}
+function snipSummary(stringToSnip) {
+  if(stringToSnip.length > 100) {
+    return stringToSnip.slice(0,100) + '...';
+  }
+  else {
+    return stringToSnip
+  }
+}
 
+
+*/
+
+
+function snipString(stringToSnip, typeOfString) {
+  if(stringToSnip != null) {
+    if(stringToSnip.length > 50 && typeOfString =='title') {
+      return stringToSnip.slice(0,50) + '...';
+    }
+    else if(stringToSnip.length > 100 && typeOfString =='summary') {
+      return stringToSnip.slice(0,100) + '...';
+    }
+    else {
+      return stringToSnip
+    }
+  }
+}
 
 module.exports = router;
