@@ -285,19 +285,12 @@ function getEachMessage(auth, messageId) {
 function getEvents(auth) {
   return new Promise((resolve, reject) => {
     var calendar = google.calendar('v3');
-    var endOfCurrentDay = new Date();
-    endOfCurrentDay.setHours(23);
-    endOfCurrentDay.setMinutes(59);
-    console.log((new Date()).toISOString());
-    console.log(endOfCurrentDay);
     calendar.events.list({
       auth: auth,
       calendarId: 'primary',
-      timeMin: (new Date()).toISOString(),
       maxResults: 10,
       singleEvents: true,
       orderBy: 'startTime',
-      timeMax: endOfCurrentDay,
     }, function(err, response) {
       if (err) {
         console.log('The API returned an error: ' + err);
