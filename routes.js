@@ -3,12 +3,8 @@
 // importing necessary packages and define global variables
 var express = require('express');
 var router = express.Router();
-var mongoose = require('mongoose');
 var axios = require('axios');
-var alphabet = "abcdefghijklmnopqrstuvwxyz".split("");
-var _ = require('underscore');
 var weather = require('weather-js');
-var fs = require('fs');
 var readline = require('readline');
 var google = require('googleapis');
 var googleAuth = require('google-auth-library');
@@ -21,7 +17,52 @@ var fs = require('fs');
 var TOKEN_DIR = path.resolve(__dirname) + '/.credentials/';
 var TOKEN_PATH = TOKEN_DIR + 'gmail_token.json';
 var SCOPES = ['https://www.googleapis.com/auth/gmail.readonly','https://www.googleapis.com/auth/calendar.readonly'];
-var axios = require('axios');
+
+
+// This is the code before refactoring
+// router.get('/', function(req, res) {
+//   var ind = 0;
+//   try {
+//     ind = 1;
+//     var data = fs.readFileSync('alarm.txt', 'utf8');
+//     var array = data.match(/[^\s]+/g);
+//     var data = array[0].split(':')
+//     var h = data[0]
+//     var m = data[1]
+//   } catch(e) {
+//     ind = 0 
+//     // console.log('Error:', e.stack); //Make it not start with an error message
+//   }
+//   weather.find({search: 'Waterville, ME', degreeType: 'F'}, function(err, result) {
+//     if (err && ind === 0) {
+//       var weather = {
+//         low: '?',
+//         high: '?',
+//         text: '?',
+//       }
+//       h = -1;
+//       m = -1;
+//     } else if (err) {
+//       var weather = {
+//         low: '?',
+//         high: '?',
+//         text: '?',
+//       }
+//     } else if (ind === 0) {
+//       h = -1;
+//       m = -1;
+//     } else {
+//       console.log(result[0].forecast)
+//       var weather = {
+//         low: result[0].forecast[0].low,
+//         high: result[0].forecast[0].high,
+//         text: result[0].forecast[0].skytextday
+//       }
+//       console.log(weather)
+//     }
+//     res.render('initial', {weather: weather, hour: h, minute: m})
+//   });
+// })
 
 router.get('/', function(req, res) {
   var returnedAlarmInfo = getAlarmInfo();
@@ -117,6 +158,73 @@ function storeToken(token) {
   fs.writeFile(TOKEN_PATH, JSON.stringify(token));
   console.log('Token stored to ' + TOKEN_PATH);
 }
+
+// This is the code before the refactoring 
+// function getPersonalInfo (auth, res, rssSource) {
+//   var gmail = google.gmail('v1');
+//   //Need to remove my old (bad) time code in favor of makoto's good time code!
+//   var messages_snippet = [];
+//   var dt = new Date();
+//   var ampm = 'pm';
+//   if (dt.getHours() / 12 < 1) {
+//     ampm = 'am'
+//   }
+//   var curTime = ((dt.getHours()) % 12) + ":" + zeroFill(dt.getMinutes(),2) + ' '+ ampm;
+//   var curDate = dt.getDate() + "-" + dt.getMonth() + "-" + dt.getFullYear();
+//   gmail.users.messages.list({
+//     auth: auth,
+//     userId: 'me',
+//     maxResults: 10,
+//     q:'is:unread',
+//   }, function(err, response) {
+//     if (err) {
+//       console.log('The API returned an error: ' + err);
+//       return;
+//     }
+//     var messages = response.messages;
+//     if (messages == null) {
+//       console.log('No messages found.');
+//       res.render('email',{message: '', time:curTime, date: curDate})
+//     } else {
+//       var promises = [];
+//       messages.forEach((mes) => {
+//         promises.push(getEachMessage(auth, mes.id, messages_snippet))
+//       })
+//       Promise.all(promises)
+//       .then(() => {
+//         console.log('Emails Obtained!')
+//         //console.log(messages_snippet);
+//         weather.find({search: 'Waterville, ME', degreeType: 'F'}, function(err, result) {
+//           if(err) {
+//             res.status(400).send({"error": "could not save data"})
+//           } else {
+//             console.log(result[0].forecast)
+//             const weather = {
+//               low: result[0].forecast[0].low,
+//               high: result[0].forecast[0].high,
+//               text: result[0].forecast[0].skytextday
+//             }
+//             axios.get('https://newsapi.org/v2/top-headlines?sources=' + rssSource + '&apiKey=' + rss_API)
+//             .then((results) => {
+//               console.log(results.data.articles)
+//               var articles = results.data.articles.map((data) => [data.title, data.url])
+//               res.render('email', {message: messages_snippet, time:curTime, date: curDate, weather: weather, articles: articles})
+//             })
+//             .catch((err) => {
+//               console.log(err)
+//             })
+//           }
+//         })
+//       })
+//       .catch((err) => {
+//         console.log(err);
+//         console.log('Oops')
+//       })
+
+//     }
+//   });
+// }
+
 
 // get all of the personal information including emails, calendar, and news source preference
 function getPersonalInfo(auth, res, rssSource) {
