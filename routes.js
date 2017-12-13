@@ -175,7 +175,7 @@ function getPersonalInfo(auth, res, rssSource) {
   .then((returnedNews) => {
     newsInfo = returnedNews ? returnedNews : [];
     var curDate = getTime()
-    res.render('email', {date: curDate, message: messagesInfo, weather: weatherInfo, articles: newsInfo, events: eventInfo})
+    res.render('email', {date: curDate, message: messagesInfo, weather: weatherInfo, articles: newsInfo, events: eventInfo, source:rssSource})
   })
 }
 
@@ -285,13 +285,19 @@ function getEachMessage(auth, messageId) {
 function getEvents(auth) {
   return new Promise((resolve, reject) => {
     var calendar = google.calendar('v3');
+    var endOfCurrentDay = new Date();
+    endOfCurrentDay.setHours(23);
+    endOfCurrentDay.setMinutes(59);
+    console.log((new Date()).toISOString());
+    console.log(endOfCurrentDay);
     calendar.events.list({
       auth: auth,
       calendarId: 'primary',
       timeMin: (new Date()).toISOString(),
       maxResults: 10,
       singleEvents: true,
-      orderBy: 'startTime'
+      orderBy: 'startTime',
+      timeMax: endOfCurrentDay,
     }, function(err, response) {
       if (err) {
         console.log('The API returned an error: ' + err);
@@ -301,6 +307,7 @@ function getEvents(auth) {
         var events = response.items
         for (var i = 0; i < events.length; i++) {
           var event = events[i];
+          console.log(event);
           var start = event.start.dateTime || event.start.date;
           result.push([start, event.summary, event.location])
         }
@@ -309,6 +316,7 @@ function getEvents(auth) {
     });
   })
 }
+//This specific function is for finding a special object from a list of objects with the name 'Subject'
 function findHeader(element) {
   return element['name']=='Subject';
 }
