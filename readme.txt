@@ -16,3 +16,5 @@ Installation of Software:
 
 Optional:
 If you do not look like Gerardo Diaz (The correct face), with your web browser go to localhost:3000/email manually by typing it into the url, it will display all of the info
+Edit preferences like RSS feed by changing jerry.txt line 4. Get sources from apinews.org that work
+Edit preferences like Alarm time by changing alarm.txt to a military time for the alarm to sound.
